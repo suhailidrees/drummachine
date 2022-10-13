@@ -1,0 +1,355 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+		<style>
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 23px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #2196F3;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 17px;
+  width: 17px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+input:checked + .slider {
+  /*background-color: #2196F3;*/
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(17px);
+  -ms-transform: translateX(17px);
+  transform: translateX(17px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 17px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+</style>
+		<style>
+			body {
+				background-color: #333;
+			}
+			table {
+				height: 100%;
+				width: 100%;
+				table-layout: fixed
+			}
+			tr {
+				/*height: 30%;*/
+			}
+			td {
+				/*width: 25%;*/
+				/*background-color: white;*/
+				border: solid #333 20px;
+			}
+
+			.slow_transition {
+				transition-duration: 500ms;
+			}	
+
+			.pad {
+				width: 100%;
+				height: 100%;
+				
+				border-radius: 10px;
+				display:flex;
+				justify-content:center;
+				align-items:center;
+				color: rgba(255,255,255,0.5);
+				font-family: "Helvetica", sans-serif;
+				font-size: 35px;
+
+			}
+
+			.toolbar {
+				height: 7vh;
+				font-family: "Helvetica", sans-serif;
+			}
+
+			.table_container {
+				height: 93vh;
+			}
+		</style>
+
+		</head>
+	<body>
+		<div class="toolbar px-3 d-flex align-items-center">
+			<div class="me-auto d-flex align-items-center">
+				<h1 class="my-0 py-0 text-light"><b>Drum</b>Machine</h1>
+			</div>
+			<div class="ms-auto d-flex align-items-center">
+				<div class="text-light mx-2 my-0">Touch</div>
+				<label class="switch">
+				  <input type="checkbox" id="settings_touch">
+				  <span class="slider round"></span>
+				</label>
+				<div class="text-light mx-2 my-0">Mouse</div>
+			</div>
+		</div>
+		<div class="table_container">
+		<table id="drum_machine_table">
+			
+				<tr>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+				</tr>
+				<tr>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+				</tr>
+				<tr>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+					<td><div class="pad"></div></td>
+				</tr>
+			
+		</table>
+	</div>
+	</body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+	<script>
+		function hslToHex(h, s, l) {
+  l /= 100;
+  const a = s * Math.min(l, 1 - l) / 100;
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+		
+
+		const settings_default = {
+			"size" : {
+				"rows": 3,
+				"columns": 3
+			},
+			"drums" : [								
+				{
+					"name": "Crash",
+					"audio": "samples/crash-noise.wav"
+				},
+				{
+					"name": "Shaker",
+					"audio": "samples/shaker-analog.wav"
+				},
+				{
+					"name": "Clap",
+					"audio": "samples/clap-808.wav"
+				},
+				{
+					"name": "Open Hat",
+					"audio": "samples/openhat-808.wav"
+				},
+				{
+					"name": "Hi Hat",
+					"audio": "samples/hihat-plain.wav"
+				},
+				{
+					"name": "Snare",
+					"audio": "samples/snare-smasher.wav"
+				},
+				{
+					"name": "Tom 1",
+					"audio": "samples/perc-tribal.wav"
+				},
+				
+				{
+					"name": "Tom 2",
+					"audio": "samples/tom-short.wav"
+				},
+
+				
+				{
+					"name": "Kick",
+					"audio": "samples/kick-classic.wav"
+				},
+			]
+		}
+
+		
+
+		const s = 30; // 0 to 100
+		const l = 50; // 0 to 100
+		const bright_l = 80;
+		var interaction_handler = "touchstart";
+
+		var audios = [];
+
+
+		function setupGrid(settings) {
+			// initialise audio index array -- TODO: delete existing audios to free up memory?
+			audios = [];
+
+
+			// clear existing table
+			$("#drum_machine_table").children().remove();
+
+			var k = 0; // count of pad overall
+
+			// add a grid based on settings
+			for (var i = 0; i < settings["size"]["rows"]; i++) {
+				var tr = $("<tr>");
+				$("#drum_machine_table").append(tr)
+				for (var j = 0; j < settings["size"]["columns"]; j++) {
+					var td = $("<td>");
+					tr.append(td);
+					var div = $("<div>", {"class": "pad", "text": settings["drums"][k]["name"], "audio_index": k});
+					td.append(div);
+
+					// set up audios array here since we are incrementing k here
+					audios[k] = new Audio(settings["drums"][k]["audio"]);
+
+					k++;
+				}
+			}
+
+			
+
+
+			// colour the pads
+			colorAllPads();
+
+			// set the event listeners
+			/*$(".pad").on("touchstart", padClick);*/
+			setEventListeners();
+		}
+
+		function setEventListeners() {
+			$(".pad").off("touchstart");
+			$(".pad").off("click");
+			$(".pad").on(interaction_handler, padClick);
+		}
+
+		function padClick(event) {
+			console.log(event);
+
+			// get the right audio and play it
+			var audio_index = parseInt($(this).attr("audio_index"))
+
+			audios[audio_index].currentTime=0; // cuts the sound if already playing
+			audios[audio_index].play();
+
+
+			/*audio.currentTime=0; // cuts the sound if already playing
+			audio.play();*/
+
+			/*$(this).removeClass("slow_transition").css("background-color", "red").delay(100)*/
+			$(this).removeClass("slow_transition");
+			var light_color_hex = hslToHex(
+				parseInt($(this).attr("default-h")),
+				parseInt($(this).attr("default-s")),
+				bright_l
+				);		
+			$(this).css("background-color", light_color_hex);
+			
+			var element = $(this)
+
+			setTimeout(
+			function()
+			{
+			  //do something special
+			  console.log("asd")
+			  console.log(element)
+			  element.addClass("slow_transition");
+			var default_color_hex = element.attr("default-color")
+			element.css("background-color", default_color_hex);
+			}, 1);
+		}
+
+		$(".pad").on("touchstart", padClick);
+
+		
+		function colorAllPads() {
+			// add a default colour for each
+			$(".pad").each(function(index) {
+				/*var h = Math.random()*360;*/
+				var h = index/$(".pad").length*360;
+				console.log(h);
+				var hex = hslToHex(h,s,l);
+
+				$(this).css("background-color", hex);
+				$(this).attr("default-color", hex);
+				$(this).attr("default-h", h);
+				$(this).attr("default-s", s);
+				$(this).attr("default-l", l);
+			})
+		}
+
+		colorAllPads();
+
+		setupGrid(settings_default);
+
+
+		function settingsHandler(event) {
+			console.log(event);
+			console.log($(this));
+			console.log($(this)[0].id)
+			var id = $(this)[0].id;
+
+			switch (id) {
+				case "settings_touch":
+					// user has switched the mouse <> touch toggle
+					if ($("#settings_touch")[0].checked) {
+						interaction_handler = "click";
+					}
+					else {
+						interaction_handler = "touchstart";
+					}
+					setEventListeners();
+					
+					break;
+				default:
+					break;
+			}
+		}
+
+		$("#settings_touch").on("change", settingsHandler);
+
+		
+	</script>
+</html>
