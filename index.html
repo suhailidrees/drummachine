@@ -85,6 +85,8 @@ input:checked + .slider:before {
 			}	
 
 			.pad {
+				white-space: pre-wrap;
+				text-align: center;
 				width: 100%;
 				height: 100%;
 				
@@ -224,6 +226,7 @@ input:checked + .slider:before {
 		function setupGrid(settings) {
 			// initialise audio index array -- TODO: delete existing audios to free up memory?
 			audios = [];
+			keyboard_map = {};
 
 
 			// clear existing table
@@ -238,11 +241,21 @@ input:checked + .slider:before {
 				for (var j = 0; j < settings["size"]["columns"]; j++) {
 					var td = $("<td>");
 					tr.append(td);
-					var div = $("<div>", {"class": "pad", "text": settings["drums"][k]["name"], "audio_index": k});
+
+					var div = $("<div>", {
+						"class": "pad", 
+						"text": `${settings["drums"][k]["name"]}\n(${key_letters[i][j]})`, 
+						"audio_index": k
+					});
+
 					td.append(div);
 
 					// set up audios array here since we are incrementing k here
 					audios[k] = new Audio(settings["drums"][k]["audio"]);
+
+					// set up keyboard map
+					keyboard_map[key_codes_lowercase[i][j]] = k;
+					keyboard_map[key_codes_uppercase[i][j]] = k;
 
 					k++;
 				}
@@ -259,11 +272,54 @@ input:checked + .slider:before {
 			setEventListeners();
 		}
 
+		var keyboard_map = {
+			49: 3
+		};
+
 		function setEventListeners() {
+			// pad clicks / touches
 			$(".pad").off("touchstart");
 			$(".pad").off("click");
 			$(".pad").on(interaction_handler, padClick);
+
+
+			// document keypresses
+			$(document).off('keypress');
+			$(document).on('keypress',function(e) {
+			    console.log(e.which);
+			    // if this key is registered, then play the sound by touching / clicking the pad
+			    if (e.which in keyboard_map) {
+			    	var audio_index = keyboard_map[e.which];
+
+			    	// find the pad that has this audio_index and trigger the right event (touchstart or click)
+			    	$(`.pad[audio_index=${audio_index}]`).trigger(interaction_handler);
+			    }
+			    
+			});
 		}
+
+		const key_codes_lowercase = [
+			[49, 50, 51, 52, 53, 54, 55, 56, 57, 48],
+			[113, 119, 101, 114, 116, 121, 117, 105, 111, 112],
+			[97, 115, 100, 102, 103, 104, 106, 107, 108, 59],
+			[122, 120, 99, 118, 98, 110, 109, 44, 46, 47]
+		]
+
+		const key_codes_uppercase = [
+			[49, 50, 51, 52, 53, 54, 55, 56, 57, 48],
+			[81, 87, 69, 82, 84, 89, 85, 73, 79, 80],
+			[65, 83, 68, 70, 71, 72, 74, 75, 76, 59],
+			[90, 88, 67, 86, 66, 78, 77, 44, 46, 47]
+		]
+
+		const key_letters = [
+			"1234567890",
+			"QWERTYUIOP",
+			"ASDFGHJKL;",
+			"ZXCVBNM,./"
+		]
+
+
 
 		function padClick(event) {
 			console.log(event);
